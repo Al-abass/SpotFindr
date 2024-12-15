@@ -1,63 +1,80 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class WallPost extends StatelessWidget {
   final String message;
   final String user;
+  final String? imageUrl;
   final int likes;
   final int commentsCount;
-  final String? imageUrl; // New field for the image
+  final String postId;
+  final List<String> likedBy;
   final VoidCallback onLike;
-  final VoidCallback onComment;
+  final VoidCallback onComment; // Can also be used for navigation
 
   const WallPost({
+    super.key,
     required this.message,
     required this.user,
+    required this.imageUrl,
     required this.likes,
     required this.commentsCount,
-    this.imageUrl,
+    required this.postId,
+    required this.likedBy,
     required this.onLike,
     required this.onComment,
-    Key? key,
-  }) : super(key: key);
+  });
+
+ 
+
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.all(8.0),
-      child: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              user,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
+    bool isLikedByUser = likedBy.contains(FirebaseAuth.instance.currentUser?.email);
+
+    return GestureDetector(
+      onTap: onComment, // Navigate to the post details when tapped
+      child: Card(
+        margin: const EdgeInsets.all(10),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(user, style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 5),
+              Text(message),
+              if (imageUrl != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Image.network(imageUrl!),
+                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: onLike,
+                        icon: Icon(
+                          isLikedByUser ? Icons.favorite : Icons.favorite_border,
+                          color: isLikedByUser ? Colors.red : Colors.grey,
+                        ),
+                      ),
+                      Text('$likes'),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      const Icon(Icons.comment, color: Colors.grey),
+                      const SizedBox(width: 5),
+                      Text('$commentsCount'),
+                    ],
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 5),
-            Text(message),
-            if (imageUrl != null) ...[
-              const SizedBox(height: 10),
-              Image.network(imageUrl!),
             ],
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton.icon(
-                  onPressed: onLike,
-                  icon: const Icon(Icons.thumb_up),
-                  label: Text(likes.toString()),
-                ),
-                TextButton.icon(
-                  onPressed: onComment,
-                  icon: const Icon(Icons.comment),
-                  label: Text(commentsCount.toString()),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );

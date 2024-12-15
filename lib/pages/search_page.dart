@@ -172,9 +172,12 @@ class _SearchPageState extends State<SearchPage> {
                       itemCount: filteredPosts.length,
                       itemBuilder: (context, index) {
                         final post = filteredPosts[index];
+                        final likedBy = List<String>.from(post['LikedBy'] ?? []);
                         return WallPost(
                           message: post['Message'],
                           user: post['UserEmail'],
+                          postId: post.id,
+                          likedBy: likedBy,
                           imageUrl: null,
                           likes: 0,
                           commentsCount: 0,

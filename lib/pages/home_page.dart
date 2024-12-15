@@ -40,25 +40,24 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> postMessage(BuildContext context) async {
     if (textController.text.isNotEmpty || _selectedImage != null) {
-      String? publicUrl;
+      String? imageUrl;
 
       // Upload image to Supabase if one is selected
       if (_selectedImage != null) {
-        publicUrl = await _uploadImagetoSupabase(_selectedImage!);
+        imageUrl = await _uploadImagetoSupabase(_selectedImage!);
       }
 
       // Save text message and image URL to Firestore
       await FirebaseFirestore.instance.collection("User Posts").add({
         "UserEmail": currentUser.email,
         "Message": textController.text,
+        "ImageUrl": imageUrl, // Upload image URL if available
         "Timestamp": Timestamp.now(),
         "Likes": 0, // Initial like count
         "CommentsCount": 0, // Initial comment count
-        "ImageUrl":
-            publicUrl ?? '', // Store the public URL or empty if no image
       });
 
-      // Clear inputs
+      // Clear the inputs
       textController.clear();
       setState(() {
         _selectedImage = null;
@@ -74,40 +73,73 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> likePost(String postId) async {
-    // Update like count
+  Future<void> likePost(String postId, String userEmail) async {
     DocumentReference postRef =
         FirebaseFirestore.instance.collection("User Posts").doc(postId);
 
-    postRef.update({
-      'Likes': FieldValue.increment(1),
-    });
+    // Get the current post data
+    DocumentSnapshot postSnapshot = await postRef.get();
+    if (postSnapshot.exists) {
+      Map<String, dynamic> postData =
+          postSnapshot.data() as Map<String, dynamic>;
+
+      // Get the list of users who have liked the post
+      List<dynamic> likedBy = postData['LikedBy'] ?? [];
+
+      // Check if the current user has already liked the post
+      if (likedBy.contains(userEmail)) {
+        // User has already liked, so we undo the like (remove user from the "LikedBy" array)
+        likedBy.remove(userEmail);
+
+        // Update the "Likes" count and "LikedBy" array
+        await postRef.update({
+          'Likes': FieldValue.increment(-1), // Decrease the like count
+          'LikedBy':
+              likedBy, // Remove the user's email from the "LikedBy" array
+        });
+      } else {
+        // User has not liked yet, so we add the like (add user to the "LikedBy" array)
+        likedBy.add(userEmail);
+
+        // Update the "Likes" count and "LikedBy" array
+        await postRef.update({
+          'Likes': FieldValue.increment(1), // Increase the like count
+          'LikedBy': likedBy, // Add the user's email to the "LikedBy" array
+        });
+      }
+    }
   }
 
-  Future<void> navigateToPostDetail(String postId) async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PostDetailPage(postId: postId),
+  Future<void> navigateToPostDetail(String postId, String postMessage, String postUser) async {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => PostDetailPage(
+        postId: postId,
+        postMessage: postMessage,
+        postUser: postUser,
+        onLike: () => onLikePost(postId),
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Future<String?> _uploadImagetoSupabase(File image) async {
     try {
       final fileName =
           'post_images/${DateTime.now().microsecondsSinceEpoch}.jpg';
 
-      // Read the file as Bytes
+      //Read the file as Bytes
       final fileBytes = await image.readAsBytes();
 
-      // Upload the file to Supabase
+      //Upload the file to Supabase
       await Supabase.instance.client.storage
           .from('images') // Replace with your bucket name
           .uploadBinary(fileName, fileBytes);
 
-      // Retrieve the public URL
-      final publicUrl = Supabase.instance.client.storage
+      //retrieve the public URL
+      final publicUrl = await Supabase.instance.client.storage
           .from('images') // Replace with your bucket name
           .getPublicUrl(fileName);
 
@@ -224,6 +256,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Future<void> onLikePost(String postId) async {
+    String userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
+    await likePost(postId,
+        userEmail); // Call the likePost function with the postId and userEmail
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -246,7 +284,6 @@ class _HomePageState extends State<HomePage> {
       body: Center(
         child: Column(
           children: [
-            // THE WALL
             Expanded(
               child: StreamBuilder(
                 stream: FirebaseFirestore.instance
@@ -263,20 +300,23 @@ class _HomePageState extends State<HomePage> {
                         final data = post.data();
                         final message = data['Message'] ?? 'No message';
                         final userEmail = data['UserEmail'] ?? 'Unknown user';
+                        final imageUrl = data['ImageUrl'];
                         final likes = data['Likes'] ?? 0;
                         final commentsCount = data['CommentsCount'] ?? 0;
                         final postId = post.id;
-                        final imageUrl =
-                            data['ImageUrl'] ?? ''; // Get the image URL
+                        final likedBy =
+                            List<String>.from(data['LikedBy'] ?? []);
 
                         return WallPost(
                           message: message,
                           user: userEmail,
+                          imageUrl: imageUrl,
                           likes: likes,
                           commentsCount: commentsCount,
-                          imageUrl: imageUrl.isNotEmpty ? imageUrl : null,
-                          onLike: () => likePost(postId),
-                          onComment: () => navigateToPostDetail(postId),
+                          postId: postId, // Ensure this is included
+                          likedBy: likedBy,
+                          onLike: () => onLikePost(postId),
+                          onComment: () => navigateToPostDetail(postId, message, userEmail),
                         );
                       },
                     );
