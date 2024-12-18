@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:spotfinder/components/wall_post.dart';
+import 'package:spotfinder/pages/post_detail_page.dart'; // Assuming you have a PostDetailsPage
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -98,6 +99,23 @@ class _SearchPageState extends State<SearchPage> {
     });
   }
 
+  // Navigate to PostDetailsPage when a post card is tapped
+  void navigateToPostDetails(DocumentSnapshot post) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PostDetailPage(
+            postId: post.id,
+            postMessage: post['Message'],
+            postUser: post['UserEmail'],
+            onLike: () {},
+            comments: const [],
+            onComment: (String comment) {},
+          ), // Your PostDetailsPage
+        ),
+      );
+    }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -172,17 +190,21 @@ class _SearchPageState extends State<SearchPage> {
                       itemCount: filteredPosts.length,
                       itemBuilder: (context, index) {
                         final post = filteredPosts[index];
-                        final likedBy = List<String>.from(post['LikedBy'] ?? []);
-                        return WallPost(
-                          message: post['Message'],
-                          user: post['UserEmail'],
-                          postId: post.id,
-                          likedBy: likedBy,
-                          imageUrl: null,
-                          likes: 0,
-                          commentsCount: 0,
-                          onLike: () {},
-                          onComment: () {},
+                        final likedBy =
+                            List<String>.from((post.data() as Map<String, dynamic>)['LikedBy'] ?? []);
+                        return GestureDetector(
+                          onTap: () => navigateToPostDetails(post), // Navigate on tap
+                          child: WallPost(
+                            message: post['Message'],
+                            user: post['UserEmail'],
+                            postId: post.id,
+                            likedBy: likedBy,
+                            imageUrl: null,
+                            likes: 0,
+                            commentsCount: 0,
+                            onLike: () {},
+                            onComment: (String comment) {},
+                          ),
                         );
                       },
                     ),

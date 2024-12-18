@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:loading_indicator/loading_indicator.dart';
+import 'package:share_plus/share_plus.dart';
 
 class PostDetailPage extends StatefulWidget {
   final String postId; // Firestore document ID of the post
@@ -10,6 +11,8 @@ class PostDetailPage extends StatefulWidget {
   final String postUser; // User who posted
   final String? imageUrl; // Optional image URL for the post
   final VoidCallback onLike;
+  final List<dynamic> comments; // Add this line
+  final Function(String) onComment;
 
   const PostDetailPage({
     super.key,
@@ -18,6 +21,8 @@ class PostDetailPage extends StatefulWidget {
     required this.postUser,
     this.imageUrl,
     required this.onLike,
+    required this.comments, // Add this line
+    required this.onComment,
   });
 
   @override
@@ -83,7 +88,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
         // Update the "Likes" count and "LikedBy" array
         await postRef.update({
           'Likes': FieldValue.increment(-1), // Decrease the like count
-          'LikedBy': likedBy, // Remove the user's email from the "LikedBy" array
+          'LikedBy':
+              likedBy, // Remove the user's email from the "LikedBy" array
         });
       } else {
         // Add the like (add user to the "LikedBy" array)
@@ -137,17 +143,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                 ),
                               ),
                               const SizedBox(height: 10),
-                              if (widget.imageUrl != null)
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: Image.network(
-                                    widget.imageUrl!,
-                                    fit: BoxFit.cover,
-                                    height: 250,
-                                    width: double.infinity,
-                                  ),
-                                ),
-                              const SizedBox(height: 15),
+
                               Text(
                                 widget.postMessage,
                                 textAlign: TextAlign.center,
@@ -156,6 +152,33 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                   height: 1.5,
                                 ),
                               ),
+
+                              const SizedBox(height: 5),
+
+                              // Image widget (remove height constraint)
+                              if (widget.imageUrl != null)
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 10),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(
+                                        8), // Rounded corners
+                                    child: Image.network(
+                                      widget.imageUrl!,
+                                      width: double.infinity,
+                                      fit: BoxFit
+                                          .cover, // Ensures image scales properly
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return const Center(
+                                          child: Icon(Icons.broken_image,
+                                              size: 50, color: Colors.grey),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              const SizedBox(height: 15),
                             ],
                           ),
                         ),
@@ -171,9 +194,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                               Row(
                                 children: [
                                   IconButton(
-                                    onPressed: () async {
-                                      _onLikePost();
-                                    },
+                                    onPressed: _onLikePost,
                                     icon: Icon(
                                       isLikedByUser
                                           ? Icons.favorite
@@ -184,10 +205,9 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                     ),
                                   ),
                                   Text(
-                                    '$likes', // Display the likes count
+                                    '$likes likes',
                                     style: const TextStyle(
                                       fontSize: 16,
-                                      fontWeight: FontWeight.bold,
                                       color: Colors.black,
                                     ),
                                   ),
@@ -196,20 +216,27 @@ class _PostDetailPageState extends State<PostDetailPage> {
                               // Comment Button
                               TextButton.icon(
                                 onPressed: () {
-                                  // Focus on the comment field
                                   FocusScope.of(context)
                                       .requestFocus(FocusNode());
                                 },
-                                icon: const Icon(Icons.comment, color: Colors.green),
+                                icon: const Icon(Icons.comment,
+                                    color: Colors.green),
                                 label: const Text("Comment"),
                               ),
                               // Share Button
                               TextButton.icon(
                                 onPressed: () {
-                                  // Handle sharing functionality here
+                                  String shareContent = widget.postMessage;
+                                  if (widget.imageUrl != null) {
+                                    shareContent +=
+                                        '\n${widget.imageUrl}'; // Append image URL if available
+                                  }
+                                  Share.share(
+                                      shareContent); // Share the message
                                 },
-                                icon: const Icon(Icons.share, color: Colors.orange),
-                                label: const Text("Share"),
+                                icon:
+                                    const Icon(Icons.share, color: Colors.blue),
+                                label: const Text(""),
                               ),
                             ],
                           ),
@@ -219,17 +246,20 @@ class _PostDetailPageState extends State<PostDetailPage> {
                   ),
                   const SizedBox(height: 20),
                   // Comments Section
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Comments",
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  const SingleChildScrollView(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "Comments",
+                        style:
+                            TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 10),
                   StreamBuilder<QuerySnapshot>(
                     stream: FirebaseFirestore.instance
-                        .collection('posts')
+                        .collection('User Posts') // Ensure it's consistent
                         .doc(widget.postId)
                         .collection('comments')
                         .orderBy('timestamp', descending: true)
@@ -277,9 +307,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                   CircleAvatar(
                                     radius: 20,
                                     backgroundColor: Colors.grey[400],
-                                    child: Icon(
+                                    child: const Icon(
                                       Icons.person,
-                                      color: Colors.white,
                                     ),
                                   ),
                                   const SizedBox(width: 10),
@@ -314,7 +343,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                           alignment: Alignment.bottomRight,
                                           child: Text(
                                             timestamp != null
-                                                ? intl.DateFormat('dd MMM, HH:mm')
+                                                ? intl.DateFormat(
+                                                        'dd MMM, HH:mm')
                                                     .format(timestamp.toDate())
                                                 : '',
                                             style: const TextStyle(
@@ -328,12 +358,16 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                 ],
                               ),
                             ),
+                            
                           );
+                          
                         },
+                        
                       );
                     },
                   ),
                   const Divider(),
+                  const SizedBox(height: 55),
                 ],
               ),
             ),
@@ -343,14 +377,12 @@ class _PostDetailPageState extends State<PostDetailPage> {
             Positioned.fill(
               child: Container(
                 color: Colors.black.withOpacity(0.5),
-                child: Center(
+                child: const Center(
                   child: SizedBox(
                     height: 50,
                     width: 50,
                     child: LoadingIndicator(
-                      indicatorType: Indicator.ballClipRotateMultiple,
-                      colors: const [Colors.green],
-                      strokeWidth: 2,
+                      indicatorType: Indicator.ballRotateChase,
                     ),
                   ),
                 ),
@@ -358,52 +390,63 @@ class _PostDetailPageState extends State<PostDetailPage> {
             ),
         ],
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _commentController,
-                  decoration: const InputDecoration(
-                    labelText: "Add a comment...",
-                    border: OutlineInputBorder(),
+
+      // Comment input at the bottom of the screen
+      bottomSheet: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 5),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _commentController,
+                    decoration: const InputDecoration(
+                      hintText: "Add a comment...",
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: null,
+                    keyboardType: TextInputType.multiline,
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              IconButton(
-                icon: const Icon(Icons.send),
-                onPressed: () async {
-                  if (_commentController.text.isNotEmpty) {
+                IconButton(
+                  icon: const Icon(Icons.send),
+                  onPressed: () async {
+                    if (_commentController.text.isEmpty) return;
+
                     setState(() {
                       isLoading = true;
                     });
 
-                    // Save the comment
-                    await FirebaseFirestore.instance
-                        .collection('posts')
-                        .doc(widget.postId)
-                        .collection('comments')
-                        .add({
-                      'comment': _commentController.text,
-                      'timestamp': FieldValue.serverTimestamp(),
-                      'user': FirebaseAuth.instance.currentUser!.email,
-                    });
+                    try {
+                      // Add comment to Firestore
+                      await FirebaseFirestore.instance
+                          .collection('User Posts')
+                          .doc(widget.postId)
+                          .collection('comments')
+                          .add({
+                        'comment': _commentController.text,
+                        'user': FirebaseAuth.instance.currentUser!.email,
+                        'timestamp': FieldValue.serverTimestamp(),
+                      });
 
-                    // Clear the input field
-                    _commentController.clear();
-
-                    setState(() {
-                      isLoading = false;
-                    });
-                  }
-                },
-              ),
-            ],
-          ),
+                      // Clear the input field after adding the comment
+                      _commentController.clear();
+                    } catch (e) {
+                      print("Error adding comment: $e");
+                    } finally {
+                      setState(() {
+                        isLoading = false;
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+          ],
         ),
       ),
     );
