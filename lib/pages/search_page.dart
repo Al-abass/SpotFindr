@@ -200,7 +200,7 @@ class _SearchPageState extends State<SearchPage> {
                             postId: post.id,
                             likedBy: likedBy,
                             imageUrl: post['ImageUrl'] ?? null,
-                            likes: 0,
+                            likes: post['Likes'] ?? 0,
                             commentsCount: 0,
                             onLike: () {},
                             onComment: (String comment) {},

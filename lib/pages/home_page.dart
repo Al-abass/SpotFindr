@@ -7,7 +7,7 @@ import 'package:spotfinder/components/text_field.dart';
 import 'package:spotfinder/components/wall_post.dart';
 import 'package:spotfinder/pages/search_page.dart';
 import 'package:spotfinder/pages/profile_page.dart';
-import 'package:spotfinder/pages/post_detail_page.dart'; // Ensure this import is correct
+import 'package:spotfinder/pages/post_detail_page.dart';
 import 'package:spotfinder/pages/user_options_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -24,10 +24,6 @@ class _HomePageState extends State<HomePage> {
   File? _selectedImage;
 
   final ImagePicker _imagePicker = ImagePicker();
-
-  void signOut() {
-    FirebaseAuth.instance.signOut();
-  }
 
   Future<void> pickImage() async {
     final pickedFile =
@@ -198,7 +194,9 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
+                  
                 ),
                 const SizedBox(height: 10),
                 MyTextField(
@@ -289,12 +287,6 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
         title: const Text("Discover"),
-        actions: [
-          IconButton(
-            onPressed: signOut,
-            icon: const Icon(Icons.logout),
-          ),
-        ],
       ),
       body: Center(
         child: Column(

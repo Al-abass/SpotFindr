@@ -13,6 +13,7 @@ class WallPost extends StatelessWidget {
   final List<String> likedBy;
   final VoidCallback onLike;
   final Function(String) onComment; // Can also be used for navigation
+  final VoidCallback? onDelete; // Delete callback
 
   const WallPost({
     super.key,
@@ -25,6 +26,7 @@ class WallPost extends StatelessWidget {
     required this.likedBy,
     required this.onLike,
     required this.onComment,
+    this.onDelete, // Delete button handler
   });
 
   @override
@@ -45,7 +47,7 @@ class WallPost extends StatelessWidget {
               onLike: onLike, // Pass the onLike callback
               onComment: (comment) =>
                   onComment(comment), // Pass the onComment callback
-              comments: const [],
+              comments: const [], // Empty comments initially
             ),
           ),
         );
@@ -58,26 +60,37 @@ class WallPost extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Row for Avatar and User Name
-              Row(
+              // Row for Avatar and User Name with delete button
+              Stack(
                 children: [
-                  const CircleAvatar(
-                    radius: 20,
-                    backgroundColor: Color.fromARGB(255, 211, 211, 211),
-                    child: Icon(
-                      Icons.person,
+                  Row(
+                    children: [
+                      const CircleAvatar(
+                        radius: 20,
+                        backgroundColor: Color.fromARGB(255, 211, 211, 211),
+                        child: Icon(
+                          Icons.person,
+                        ),
+                      ),
+                      const SizedBox(width: 12), // Add spacing between avatar and name
+                      Text(
+                        user,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  if (onDelete != null) // Show delete button if provided
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: onDelete,
+                      ),
                     ),
-                  ),
-                  const SizedBox(
-                      width: 12), // Add spacing between avatar and name
-                  Text(
-                    user,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
                 ],
               ),
-              const SizedBox(
-                  height: 10), // Add spacing between user info and message
+              const SizedBox(height: 10), // Add spacing between user info and message
               Text(message),
               if (imageUrl != null)
                 Padding(

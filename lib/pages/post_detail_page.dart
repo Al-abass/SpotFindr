@@ -124,66 +124,58 @@ class _PostDetailPageState extends State<PostDetailPage> {
                 children: [
                   // Post Details
                   Card(
-                    color: Theme.of(context).colorScheme.primary,
-                    elevation: 5,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Text(
-                                widget.postUser,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
+  color: Theme.of(context).colorScheme.primary,
+  elevation: 5,
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(12),
+  ),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start, // Ensures all content aligns left
+    children: [
+      Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start, // Align content to the left
+          children: [
+            Text(
+              widget.postUser,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              widget.postMessage,
+              style: const TextStyle(
+                fontSize: 18,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+      if (widget.imageUrl != null)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8), // Rounded corners
+            child: Image.network(
+              widget.imageUrl!,
+              width: double.infinity,
+              fit: BoxFit.cover, // Ensures image scales properly
+              errorBuilder: (context, error, stackTrace) {
+                return const Center(
+                  child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                );
+              },
+            ),
+          ),
+        ),
+      const Divider(height: 1, thickness: 1),
+      // Actions Row remains unchanged
 
-                              Text(
-                                widget.postMessage,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  height: 1.5,
-                                ),
-                              ),
-
-                              const SizedBox(height: 5),
-
-                              // Image widget (remove height constraint)
-                              if (widget.imageUrl != null)
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 10),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(
-                                        8), // Rounded corners
-                                    child: Image.network(
-                                      widget.imageUrl!,
-                                      width: double.infinity,
-                                      fit: BoxFit
-                                          .cover, // Ensures image scales properly
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        return const Center(
-                                          child: Icon(Icons.broken_image,
-                                              size: 50, color: Colors.grey),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              const SizedBox(height: 15),
-                            ],
-                          ),
-                        ),
-                        const Divider(height: 1, thickness: 1),
                         // Actions Row
                         Padding(
                           padding: const EdgeInsets.symmetric(
@@ -229,7 +221,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                   Text(
                                     "Comment",
                                     style: TextStyle(
-                                      fontSize: 14,// Adjust color based on theme
+                                      fontSize:
+                                          14, // Adjust color based on theme
                                     ),
                                   ),
                                 ],

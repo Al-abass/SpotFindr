@@ -22,6 +22,14 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
+    // Initial fetch on page load
+    fetchUserProfile();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh the profile data every time the page is revisited
     fetchUserProfile();
   }
 
@@ -44,6 +52,9 @@ class _ProfilePageState extends State<ProfilePage> {
         gender = userData['gender'] ?? ""; // Keep empty if not set
         dobController.text = userData['dob'] ?? "";
         locationController.text = userData['location'] ?? "";
+
+        // Trigger a rebuild with the fetched data
+        setState(() {});  // Refresh the state so the dropdown is updated
       }
     }
   }
@@ -143,7 +154,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 20),
                 // Gender Dropdown
                 DropdownButtonFormField<String>(
-                  value: gender.isEmpty ? null : gender,
+                  value: gender.isEmpty ? null : gender,  // Set the value based on gender
                   onChanged: isEditing
                       ? (String? newValue) {
                           setState(() {
