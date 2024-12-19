@@ -51,6 +51,7 @@ class WallPost extends StatelessWidget {
         );
       },
       child: Card(
+        color: Theme.of(context).colorScheme.primary,
         margin: const EdgeInsets.all(10),
         child: Padding(
           padding: const EdgeInsets.all(15),

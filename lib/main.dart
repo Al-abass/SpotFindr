@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:spotfinder/auth/auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:spotfinder/theme/dark_theme.dart';
+import 'package:spotfinder/theme/light_theme.dart';
 import 'firebase_options.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -31,9 +33,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: AuthPage(),
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      home: const AuthPage(),
     );
   }
 }

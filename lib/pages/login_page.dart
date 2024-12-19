@@ -64,7 +64,6 @@ void signIn() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFc7f9cc), // Light green background
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

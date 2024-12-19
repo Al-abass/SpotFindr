@@ -121,8 +121,6 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Search"),
-        backgroundColor: const Color(0xFF22577a),
-        foregroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -132,6 +130,7 @@ class _SearchPageState extends State<SearchPage> {
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
+                
                 hintText: 'Search for spots...',
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.search),
@@ -145,6 +144,7 @@ class _SearchPageState extends State<SearchPage> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
+                fillColor: Theme.of(context).colorScheme.primary,
               ),
               onChanged: (value) {
                 onSearch(value.trim()); // Trigger search as the user types
@@ -199,7 +199,7 @@ class _SearchPageState extends State<SearchPage> {
                             user: post['UserEmail'],
                             postId: post.id,
                             likedBy: likedBy,
-                            imageUrl: null,
+                            imageUrl: post['ImageUrl'] ?? null,
                             likes: 0,
                             commentsCount: 0,
                             onLike: () {},

@@ -124,6 +124,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                 children: [
                   // Post Details
                   Card(
+                    color: Theme.of(context).colorScheme.primary,
                     elevation: 5,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -207,22 +208,33 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                   Text(
                                     '$likes likes',
                                     style: const TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.black,
+                                      fontSize: 14,
                                     ),
                                   ),
                                 ],
                               ),
-                              // Comment Button
-                              TextButton.icon(
-                                onPressed: () {
-                                  FocusScope.of(context)
-                                      .requestFocus(FocusNode());
-                                },
-                                icon: const Icon(Icons.comment,
-                                    color: Colors.green),
-                                label: const Text("Comment"),
+// Comment Button
+                              Row(
+                                children: [
+                                  IconButton(
+                                    onPressed: () {
+                                      FocusScope.of(context)
+                                          .requestFocus(FocusNode());
+                                    },
+                                    icon: const Icon(
+                                      Icons.comment,
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                  Text(
+                                    "Comment",
+                                    style: TextStyle(
+                                      fontSize: 14,// Adjust color based on theme
+                                    ),
+                                  ),
+                                ],
                               ),
+
                               // Share Button
                               TextButton.icon(
                                 onPressed: () {
@@ -251,8 +263,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       alignment: Alignment.centerLeft,
                       child: Text(
                         "Comments",
-                        style:
-                            TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -290,7 +302,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                             child: Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.grey[200],
+                                color: Theme.of(context).colorScheme.secondary,
                                 borderRadius: BorderRadius.circular(12),
                                 boxShadow: [
                                   BoxShadow(
@@ -306,7 +318,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                   // Avatar
                                   CircleAvatar(
                                     radius: 20,
-                                    backgroundColor: Colors.grey[400],
+                                    backgroundColor:
+                                        Color.fromARGB(255, 211, 211, 211),
                                     child: const Icon(
                                       Icons.person,
                                     ),
@@ -334,7 +347,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                           style: const TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
-                                            color: Colors.black,
                                           ),
                                         ),
                                         const SizedBox(height: 4),
@@ -358,11 +370,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                 ],
                               ),
                             ),
-                            
                           );
-                          
                         },
-                        
                       );
                     },
                   ),
@@ -392,7 +401,10 @@ class _PostDetailPageState extends State<PostDetailPage> {
       ),
 
       // Comment input at the bottom of the screen
-      bottomSheet: Padding(
+      bottomSheet: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary,
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -403,9 +415,10 @@ class _PostDetailPageState extends State<PostDetailPage> {
                 Expanded(
                   child: TextField(
                     controller: _commentController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
+                      fillColor: Theme.of(context).colorScheme.secondary,
                       hintText: "Add a comment...",
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                     ),
                     maxLines: null,
                     keyboardType: TextInputType.multiline,
@@ -413,6 +426,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.send),
+                  color: Color(0xFF57cc99),
                   onPressed: () async {
                     if (_commentController.text.isEmpty) return;
 

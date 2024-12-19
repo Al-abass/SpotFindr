@@ -41,14 +41,14 @@ class _MyTextFieldState extends State<MyTextField> {
         readOnly: widget.readOnly, // Set the read-only state
         decoration: InputDecoration(
           enabledBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: Colors.white),
+            borderSide: BorderSide(color: Theme.of(context).colorScheme.secondary),
             borderRadius: BorderRadius.circular(10),
           ),
           focusedBorder: OutlineInputBorder(
             borderSide: const BorderSide(color: Colors.white),
             borderRadius: BorderRadius.circular(10),
           ),
-          fillColor: Colors.white,
+          fillColor: Theme.of(context).colorScheme.primary,
           filled: true,
           hintText: widget.hintText,
           hintStyle: const TextStyle(color: Colors.grey),
