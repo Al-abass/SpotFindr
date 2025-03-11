@@ -14,6 +14,7 @@ class WallPost extends StatelessWidget {
   final VoidCallback onLike;
   final Function(String) onComment; // Can also be used for navigation
   final VoidCallback? onDelete; // Delete callback
+  final VoidCallback? onEdit; // Edit callback
 
   const WallPost({
     super.key,
@@ -27,12 +28,14 @@ class WallPost extends StatelessWidget {
     required this.onLike,
     required this.onComment,
     this.onDelete, // Delete button handler
+    this.onEdit,   // Edit button handler
   });
 
   @override
   Widget build(BuildContext context) {
     bool isLikedByUser =
         likedBy.contains(FirebaseAuth.instance.currentUser?.email);
+    bool isCurrentUser = user == FirebaseAuth.instance.currentUser?.email;
 
     return GestureDetector(
       onTap: () {
@@ -61,7 +64,8 @@ class WallPost extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Row for Avatar and User Name with delete button
-              Stack(
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
@@ -79,14 +83,26 @@ class WallPost extends StatelessWidget {
                       ),
                     ],
                   ),
-                  if (onDelete != null) // Show delete button if provided
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: onDelete,
-                      ),
+                  if (isCurrentUser) // Show 3-dot menu for current user's posts
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'edit' && onEdit != null) {
+                          onEdit!(); // Call the edit handler
+                        } else if (value == 'delete' && onDelete != null) {
+                          onDelete!(); // Call the delete handler
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Text('Edit'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Text('Delete'),
+                        ),
+                      ],
+                      icon: const Icon(Icons.more_vert),
                     ),
                 ],
               ),

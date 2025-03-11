@@ -14,41 +14,128 @@ class MyPostsPage extends StatefulWidget {
 
 class _MyPostsPageState extends State<MyPostsPage> {
   Future<void> _deletePost(BuildContext context, String postId) async {
-  final scaffoldMessenger = ScaffoldMessenger.of(context);  // Save reference
+    final scaffoldMessenger = ScaffoldMessenger.of(context); // Save reference
 
-  try {
-    await FirebaseFirestore.instance
-        .collection('User Posts')
-        .doc(postId)
-        .delete();
+    try {
+      await FirebaseFirestore.instance
+          .collection('User Posts')
+          .doc(postId)
+          .delete();
 
-    if (mounted) {
-      setState(() {
-        // Trigger UI update (StreamBuilder will pick it up)
-      });
+      if (mounted) {
+        setState(() {
+          // Trigger UI update (StreamBuilder will pick it up)
+        });
 
-      scaffoldMessenger.showSnackBar(  // Use saved reference
-        const SnackBar(
-          content: Text('Post deleted successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(
+            content: Text('Post deleted successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete post: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
-  } catch (e) {
-    if (mounted) {
-      scaffoldMessenger.showSnackBar(  // Use saved reference
-        SnackBar(
-          content: Text('Failed to delete post: $e'),
+  }
+
+  Future<void> _editPost(BuildContext context, String postId) async {
+    final postDoc =
+        FirebaseFirestore.instance.collection('User Posts').doc(postId);
+    final postData = await postDoc.get();
+
+    if (!postData.exists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to fetch post data for editing.'),
           backgroundColor: Colors.red,
         ),
       );
+      return;
     }
+
+    final data = postData.data() as Map<String, dynamic>;
+    final TextEditingController messageController =
+        TextEditingController(text: data['Message']);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            top: 16.0,
+            left: 16.0,
+            right: 16.0,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Edit Post',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: messageController,
+                decoration: const InputDecoration(
+                  labelText: 'Message',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: null,
+              ),
+              const SizedBox(height: 16),
+                ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal, // Set the background color here
+                ),
+                onPressed: () async {
+                  final updatedMessage = messageController.text.trim();
+
+                  if (updatedMessage.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Message cannot be empty!'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  try {
+                    await postDoc.update({'Message': updatedMessage});
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Post updated successfully!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to update post: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
-}
-
-
-
-
 
   void _showDeleteConfirmationDialog(BuildContext context, String postId) {
     // Ensure the dialog only interacts with valid widget context
@@ -59,8 +146,8 @@ class _MyPostsPageState extends State<MyPostsPage> {
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Delete Post'),
-          content: const Text(
-              'Are you sure you want to permanently delete this post?'),
+          content:
+              const Text('Are you sure you want to permanently delete this post?'),
           actions: [
             TextButton(
               style: TextButton.styleFrom(
@@ -68,14 +155,13 @@ class _MyPostsPageState extends State<MyPostsPage> {
                 foregroundColor: Colors.white,
               ),
               onPressed: () {
-                if (mounted)
-                  Navigator.of(dialogContext).pop(); // Close the dialog
+                if (mounted) Navigator.of(dialogContext).pop(); // Close the dialog
               },
               child: const Text('No'),
             ),
             TextButton(
               style: TextButton.styleFrom(
-                backgroundColor: Colors.red, // Gray "No" button
+                backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
               ),
               onPressed: () {
@@ -99,7 +185,7 @@ class _MyPostsPageState extends State<MyPostsPage> {
     if (currentUser == null) {
       return Scaffold(
         body: Center(
-          child: Text('You are not logged in!'),
+          child: const Text('You are not logged in!'),
         ),
       );
     }
@@ -111,8 +197,7 @@ class _MyPostsPageState extends State<MyPostsPage> {
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
             .collection("User Posts")
-            .where('UserEmail',
-                isEqualTo: currentUser.email) // Filter by user email
+            .where('UserEmail', isEqualTo: currentUser.email) // Filter by user email
             .orderBy('Timestamp', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
@@ -160,8 +245,8 @@ class _MyPostsPageState extends State<MyPostsPage> {
                       // Implement comment functionality here
                     },
                     onDelete: () => _showDeleteConfirmationDialog(context, postId),
+                    onEdit: () => _editPost(context, postId),
                   ),
-                  
                   const Divider(),
                 ],
               );

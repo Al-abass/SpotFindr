@@ -101,20 +101,20 @@ class _SearchPageState extends State<SearchPage> {
 
   // Navigate to PostDetailsPage when a post card is tapped
   void navigateToPostDetails(DocumentSnapshot post) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PostDetailPage(
-            postId: post.id,
-            postMessage: post['Message'],
-            postUser: post['UserEmail'],
-            onLike: () {},
-            comments: const [],
-            onComment: (String comment) {},
-          ), // Your PostDetailsPage
-        ),
-      );
-    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PostDetailPage(
+          postId: post.id,
+          postMessage: post['Message'],
+          postUser: post['UserEmail'],
+          onLike: () {},
+          comments: const [],
+          onComment: (String comment) {},
+        ), // Your PostDetailsPage
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +130,6 @@ class _SearchPageState extends State<SearchPage> {
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                
                 hintText: 'Search for spots...',
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.search),
@@ -141,10 +140,17 @@ class _SearchPageState extends State<SearchPage> {
                     }
                   },
                 ),
-                border: OutlineInputBorder(
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.secondary),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(color: Colors.white),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 fillColor: Theme.of(context).colorScheme.primary,
+                filled: true,
               ),
               onChanged: (value) {
                 onSearch(value.trim()); // Trigger search as the user types
@@ -190,10 +196,12 @@ class _SearchPageState extends State<SearchPage> {
                       itemCount: filteredPosts.length,
                       itemBuilder: (context, index) {
                         final post = filteredPosts[index];
-                        final likedBy =
-                            List<String>.from((post.data() as Map<String, dynamic>)['LikedBy'] ?? []);
+                        final likedBy = List<String>.from(
+                            (post.data() as Map<String, dynamic>)['LikedBy'] ??
+                                []);
                         return GestureDetector(
-                          onTap: () => navigateToPostDetails(post), // Navigate on tap
+                          onTap: () =>
+                              navigateToPostDetails(post), // Navigate on tap
                           child: WallPost(
                             message: post['Message'],
                             user: post['UserEmail'],

@@ -125,7 +125,7 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 const SizedBox(height: 40),
                 // Profile Picture
-                CircleAvatar(
+                const CircleAvatar(
                   radius: 60,
                   backgroundColor: const Color(0xFF22577a),
                   child: Icon(
@@ -144,7 +144,18 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 30),
+
                 // Name Field
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Name",
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 5),
                 MyTextField(
                   controller: nameController,
                   hintText: "Name",
@@ -152,7 +163,18 @@ class _ProfilePageState extends State<ProfilePage> {
                   readOnly: !isEditing,
                 ),
                 const SizedBox(height: 20),
+
                 // Gender Dropdown
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: const Text(
+                    "Gender",
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 5),
                 DropdownButtonFormField<String>(
                   value: gender.isEmpty ? null : gender,  // Set the value based on gender
                   onChanged: isEditing
@@ -191,7 +213,18 @@ class _ProfilePageState extends State<ProfilePage> {
                   ],
                 ),
                 const SizedBox(height: 20),
+
                 // Date of Birth Field
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: const Text(
+                    "Date of Birth",
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 5),
                 MyTextField(
                   controller: dobController,
                   hintText: "YYYY-MM-DD",
@@ -206,7 +239,18 @@ class _ProfilePageState extends State<ProfilePage> {
                       : null,
                 ),
                 const SizedBox(height: 20),
+
                 // Location Field
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: const Text(
+                    "Location",
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 5),
                 MyTextField(
                   controller: locationController,
                   hintText: "Location",
@@ -214,6 +258,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   readOnly: !isEditing,
                 ),
                 const SizedBox(height: 30),
+
                 // Save Button
                 if (isEditing)
                   ElevatedButton(

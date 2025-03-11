@@ -21,6 +21,7 @@ class _HomePageState extends State<HomePage> {
   final currentUser = FirebaseAuth.instance.currentUser!;
   final textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _editController = TextEditingController();
   File? _selectedImage;
 
   final ImagePicker _imagePicker = ImagePicker();
@@ -170,88 +171,93 @@ class _HomePageState extends State<HomePage> {
   }
 
   void showPostModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFF22577a),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (BuildContext context) {
-        return SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              20,
-              20,
-              20,
-              MediaQuery.of(context).viewInsets.bottom + 20,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  "Write something on the wall",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: const Color(0xFF22577a),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (BuildContext context) {
+      return SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            20,
+            20,
+            MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Write something on the wall",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
-                const SizedBox(height: 10),
-                MyTextField(
-                  controller: textController,
-                  hintText: "Type your message here...",
-                  obscureText: false,
-                  readOnly: false,
-                ),
-                const SizedBox(height: 10),
-                _selectedImage != null
-                    ? Column(
-                        children: [
-                          Image.file(
-                            _selectedImage!,
-                            height: 150,
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              setState(() {
-                                _selectedImage = null;
-                              });
-                            },
-                            child: const Text(
-                              "Remove Image",
-                              style: TextStyle(color: Color(0xFF38a3a5)),
-                            ),
-                          ),
-                        ],
-                      )
-                    : ElevatedButton.icon(
-                        onPressed: pickImage,
-                        icon: const Icon(Icons.photo),
-                        label: const Text("Add Image"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF38a3a5),
-                          foregroundColor: Colors.white,
-                        ),
+              ),
+              const SizedBox(height: 10),
+              MyTextField(
+                controller: textController,
+                hintText: "Type your message here...",
+                obscureText: false,
+                readOnly: false,
+              ),
+              const SizedBox(height: 10),
+              if (_selectedImage != null) ...[
+                Column(
+                  children: [
+                    Image.file(
+                      _selectedImage!,
+                      height: 150,
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _selectedImage = null;
+                        });
+                      },
+                      child: const Text(
+                        "Remove Image",
+                        style: TextStyle(color: Color(0xFF38a3a5)),
                       ),
-                const SizedBox(height: 10),
-                ElevatedButton.icon(
-                  onPressed: () => postMessage(context),
-                  icon: const Icon(Icons.send),
-                  label: const Text("Post"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF57cc99),
-                    foregroundColor: Colors.white,
-                  ),
+                    ),
+                  ],
                 ),
               ],
-            ),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: pickImage,
+                    icon: const Icon(Icons.photo),
+                    label: const Text("Add Image"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF38a3a5),
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () => postMessage(context),
+                    icon: const Icon(Icons.send),
+                    label: const Text("Post"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF57cc99),
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
 
   void scrollToTop() {
     _scrollController.animateTo(
@@ -279,6 +285,153 @@ class _HomePageState extends State<HomePage> {
     String userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
     await likePost(postId,
         userEmail); // Call the likePost function with the postId and userEmail
+  }
+  Future<void> _deletePost(String postId) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Post'),
+          content: const Text(
+              'Are you sure you want to permanently delete this post?'),
+          actions: [
+            TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.grey,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () async {
+                // Delete the post
+                await FirebaseFirestore.instance
+                    .collection("User Posts")
+                    .doc(postId)
+                    .delete();
+                Navigator.of(context).pop(); // Close dialog
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  Future<void> _editPost(String postId, String currentMessage) async {
+    _editController.text = currentMessage;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF22577a),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              20,
+              20,
+              MediaQuery.of(context).viewInsets.bottom + 20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Edit Post",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                MyTextField(
+                  controller: _editController,
+                  hintText: "Update your message...",
+                  obscureText: false,
+                  readOnly: false,
+                ),
+                const SizedBox(height: 10),
+                if (_selectedImage != null) ...[
+                  Column(
+                    children: [
+                      Image.file(
+                        _selectedImage!,
+                        height: 150,
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _selectedImage = null;
+                          });
+                        },
+                        child: const Text(
+                          "Remove Image",
+                          style: TextStyle(color: Color(0xFF38a3a5)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 10),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    // Update the post
+                    await FirebaseFirestore.instance
+                        .collection("User Posts")
+                        .doc(postId)
+                        .update({
+                      "Message": _editController.text,
+                      "ImageUrl": _selectedImage != null
+                          ? await _uploadImagetoSupabase(_selectedImage!)
+                          : null,
+                    });
+
+                    // Clear inputs
+                    setState(() {
+                      _editController.clear();
+                      _selectedImage = null;
+                    });
+                    Navigator.pop(context);
+                  },
+                  icon: const Icon(Icons.save),
+                  label: const Text("Save Changes"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF57cc99),
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+  Future<void> _updatePostText(String postId, String updatedText) async {
+    if (updatedText.isNotEmpty) {
+      await FirebaseFirestore.instance.collection("User Posts").doc(postId).update({
+        "Message": updatedText,
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Post updated successfully!")),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Message cannot be empty.")),
+      );
+    }
   }
 
   @override
@@ -330,6 +483,12 @@ class _HomePageState extends State<HomePage> {
                                 message,
                                 userEmail,
                                 data['Comments'] ?? []),
+                                onEdit: userEmail == currentUser.email
+                    ? () => _editPost(postId, message)
+                    : null,
+                onDelete: userEmail == currentUser.email
+                    ? () => _deletePost(postId)
+                    : null,
                           );
                         },
                       ),
